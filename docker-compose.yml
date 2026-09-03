@@ -1,0 +1,68 @@
+services:
+  postgres:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -h 127.0.0.1"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 60s
+
+  backend:
+    build: { context: ./backend, dockerfile: Dockerfile }
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      # имя сервиса postgres в docker-сети, не хост из .env
+      POSTGRES_HOST: postgres
+      DJANGO_STATIC_ROOT: /var/www/static
+      DJANGO_MEDIA_ROOT: /var/www/media
+    volumes:
+      - static_files:/var/www/static
+      - media_files:/var/www/media
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  frontend:
+    build: { context: ./frontend, dockerfile: Dockerfile }
+    restart: unless-stopped
+    environment:
+      NUXT_API_INTERNAL: http://backend:8000
+      NUXT_PUBLIC_API_BASE: /api
+    depends_on: [backend]
+
+  nginx:
+    build: { context: ./nginx, dockerfile: Dockerfile }
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${DOMAIN}
+    ports: ["80:80", "443:443"]
+    volumes:
+      - static_files:/var/www/static:ro
+      - media_files:/var/www/media:ro
+      - certbot_certs:/etc/letsencrypt:ro
+      - certbot_www:/var/www/certbot
+    depends_on: [backend, frontend]
+
+  certbot:
+    image: certbot/certbot
+    restart: unless-stopped
+    volumes:
+      - certbot_certs:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
+    # раз в 12 часов пробуем продлить сертификат
+    entrypoint: /bin/sh -c 'trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot; sleep 12h & wait $${!}; done'
+
+volumes:
+  pg_data:
+  static_files:
+  media_files:
+  certbot_certs:
+  certbot_www:

@@ -1,0 +1,6 @@
+# локальные зависимости и сборки не нужны в контексте
+app/node_modules
+app/.nuxt
+app/.output
+# состояние линковки yarn с хоста ломает install в контейнере
+app/.yarn/install-state.gz

@@ -1,0 +1,54 @@
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    ports: ["5432:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -h 127.0.0.1"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      # первый запуск postgres это initdb + внутренний рестарт - будем ждать
+      start_period: 60s
+
+  backend:
+    build: { context: ./backend, dockerfile: Dockerfile.dev }
+    env_file: .env
+    environment:
+      POSTGRES_HOST: postgres
+      DJANGO_DEBUG: "1"
+      JWT_COOKIE_SECURE: "0"
+      DJANGO_MEDIA_ROOT: /var/www/media
+    volumes:
+      # код монтируем поверх образа
+      - ./backend/app:/app
+      - media_files:/var/www/media
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  frontend:
+    build: { context: ./frontend, dockerfile: Dockerfile.dev }
+    environment:
+      NUXT_API_INTERNAL: http://backend:8000
+      NUXT_PUBLIC_API_BASE: /api
+    volumes:
+      - ./frontend/app:/app
+      # node_modules из образа, не с хоста
+      - /app/node_modules
+    depends_on: [backend]
+
+  nginx:
+    build: { context: ./nginx, dockerfile: Dockerfile.dev }
+    ports: ["80:80"]
+    volumes:
+      - media_files:/var/www/media:ro
+    depends_on: [backend, frontend]
+
+volumes:
+  pg_data:
+  media_files:

@@ -1,0 +1,6 @@
+# локальные артефакты, не нужные в образе
+app/.venv
+**/__pycache__
+**/*.pyc
+app/media
+app/staticfiles

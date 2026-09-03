@@ -1,0 +1,8 @@
+node_modules/
+.nuxt/
+.output/
+.yarn/*
+!.yarn/patches
+!.yarn/releases
+!.yarn/plugins
+!.yarn/sdks

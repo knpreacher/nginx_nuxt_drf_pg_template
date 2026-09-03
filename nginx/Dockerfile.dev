@@ -1,0 +1,4 @@
+# dev: без TLS, только прокси + HMR
+FROM nginx:1.27-alpine
+
+COPY nginx.dev.conf /etc/nginx/conf.d/default.conf

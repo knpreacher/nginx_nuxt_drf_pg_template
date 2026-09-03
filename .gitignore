@@ -1,0 +1,26 @@
+# Env
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+.pytest_cache/
+*.sqlite3
+backend/app/test.db
+backend/app/staticfiles/
+backend/app/media/
+
+# Node / Nuxt
+node_modules/
+.nuxt/
+.output/
+.yarn/*
+!.yarn/patches
+!.yarn/releases
+!.yarn/plugins
+!.yarn/sdks
+
+# OS / editor
+.DS_Store
