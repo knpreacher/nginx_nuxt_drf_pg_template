@@ -1,0 +1,75 @@
+{
+  "nav": {
+    "home": "Home",
+    "catalog": "Catalog",
+    "profile": "Profile",
+    "settings": "Settings"
+  },
+  "common": {
+    "appName": "App",
+    "logout": "Log out",
+    "menu": "Menu",
+    "theme": "Theme",
+    "cancel": "Cancel",
+    "save": "Save",
+    "add": "Add",
+    "edit": "Edit",
+    "delete": "Delete",
+    "yes": "yes",
+    "no": "no"
+  },
+  "login": {
+    "title": "Sign in",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Sign in",
+    "error": "Invalid email or password"
+  },
+  "index": {
+    "welcome": "Welcome, {email}",
+    "health": "Backend health:",
+    "chain": "nginx → nuxt (SSR) → drf → postgres ✅"
+  },
+  "profile": {
+    "title": "Profile",
+    "email": "Email",
+    "staff": "Staff"
+  },
+  "settings": {
+    "title": "Settings",
+    "stub": "Placeholder. Settings will live here."
+  },
+  "catalog": {
+    "title": "Catalog",
+    "add": "Add",
+    "searchPlaceholder": "Search by name and description",
+    "empty": "Nothing found",
+    "imageLabel": "Image",
+    "removeImage": "Remove image",
+    "dropzoneLabel": "Drop an image or click",
+    "dropzoneHint": "PNG, JPG",
+    "fieldName": "Name",
+    "fieldDescription": "Description",
+    "newTitle": "New item",
+    "editTitle": "Edit item",
+    "newDesc": "Fill in the new item fields",
+    "editDesc": "Change fields and save",
+    "deleteTitle": "Delete item?",
+    "deleteDesc": "This cannot be undone",
+    "deleteConfirm": "“{name}” will be deleted permanently.",
+    "order": {
+      "newest": "Newest first",
+      "oldest": "Oldest first",
+      "nameAsc": "Name A-Z",
+      "nameDesc": "Name Z-A",
+      "updated": "Recently updated"
+    },
+    "toast": {
+      "created": "Created",
+      "saved": "Saved",
+      "deleted": "Deleted",
+      "saveError": "Could not save",
+      "deleteError": "Could not delete"
+    }
+  }
+}

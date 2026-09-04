@@ -1,10 +1,11 @@
 <script setup lang="ts">
 const emit = defineEmits<{ navigate: [] }>()
 const route = useRoute()
+const { t } = useI18n()
 
 const items = computed(() =>
   useNav().map((i) => ({
-    label: i.label,
+    label: t(i.labelKey),
     icon: i.icon,
     to: i.to,
     active: route.path === i.to,

@@ -1,15 +1,15 @@
 export interface NavItem {
-  label: string
+  labelKey: string
   icon: string
   to: string
 }
 
-// пункты навигации
+// пункты навигации; перевод labelKey делает вызывающий компонент (t на верхнем уровне setup)
 export function useNav(): NavItem[] {
   return [
-    { label: "Home", icon: "i-lucide-home", to: "/" },
-    { label: "Catalog", icon: "i-lucide-boxes", to: "/catalog" },
-    { label: "Profile", icon: "i-lucide-user", to: "/profile" },
-    { label: "Settings", icon: "i-lucide-settings", to: "/settings" },
+    { labelKey: "nav.home", icon: "i-lucide-home", to: "/" },
+    { labelKey: "nav.catalog", icon: "i-lucide-boxes", to: "/catalog" },
+    { labelKey: "nav.profile", icon: "i-lucide-user", to: "/profile" },
+    { labelKey: "nav.settings", icon: "i-lucide-settings", to: "/settings" },
   ]
 }

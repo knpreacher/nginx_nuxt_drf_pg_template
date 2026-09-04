@@ -1,0 +1,75 @@
+{
+  "nav": {
+    "home": "Главная",
+    "catalog": "Каталог",
+    "profile": "Профиль",
+    "settings": "Настройки"
+  },
+  "common": {
+    "appName": "App",
+    "logout": "Выйти",
+    "menu": "Меню",
+    "theme": "Тема",
+    "cancel": "Отмена",
+    "save": "Сохранить",
+    "add": "Добавить",
+    "edit": "Редактировать",
+    "delete": "Удалить",
+    "yes": "да",
+    "no": "нет"
+  },
+  "login": {
+    "title": "Вход",
+    "email": "Email",
+    "password": "Пароль",
+    "submit": "Войти",
+    "error": "Неверный email или пароль"
+  },
+  "index": {
+    "welcome": "Добро пожаловать, {email}",
+    "health": "Состояние бэкенда:",
+    "chain": "nginx → nuxt (SSR) → drf → postgres ✅"
+  },
+  "profile": {
+    "title": "Профиль",
+    "email": "Email",
+    "staff": "Сотрудник"
+  },
+  "settings": {
+    "title": "Настройки",
+    "stub": "Заглушка. Здесь будут настройки."
+  },
+  "catalog": {
+    "title": "Каталог",
+    "add": "Добавить",
+    "searchPlaceholder": "Поиск по названию и описанию",
+    "empty": "Ничего не найдено",
+    "imageLabel": "Картинка",
+    "removeImage": "Удалить картинку",
+    "dropzoneLabel": "Перетащите картинку или нажмите",
+    "dropzoneHint": "PNG, JPG",
+    "fieldName": "Название",
+    "fieldDescription": "Описание",
+    "newTitle": "Новый элемент",
+    "editTitle": "Редактировать элемент",
+    "newDesc": "Заполните поля нового элемента",
+    "editDesc": "Измените поля и сохраните",
+    "deleteTitle": "Удалить элемент?",
+    "deleteDesc": "Действие необратимо",
+    "deleteConfirm": "«{name}» будет удалён безвозвратно.",
+    "order": {
+      "newest": "Сначала новые",
+      "oldest": "Сначала старые",
+      "nameAsc": "Название А-Я",
+      "nameDesc": "Название Я-А",
+      "updated": "Недавно изменённые"
+    },
+    "toast": {
+      "created": "Создано",
+      "saved": "Сохранено",
+      "deleted": "Удалено",
+      "saveError": "Не удалось сохранить",
+      "deleteError": "Не удалось удалить"
+    }
+  }
+}

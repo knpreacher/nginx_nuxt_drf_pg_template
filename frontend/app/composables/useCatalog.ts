@@ -14,13 +14,13 @@ export interface Paginated<T> {
   results: T[]
 }
 
-// варианты сортировки для селекта
+// варианты сортировки: value — для API, key — ключ перевода (catalog.order.*)
 export const ORDER_OPTIONS = [
-  { label: "Сначала новые", value: "-created_at" },
-  { label: "Сначала старые", value: "created_at" },
-  { label: "Название А-Я", value: "name" },
-  { label: "Название Я-А", value: "-name" },
-  { label: "Недавно изменённые", value: "-updated_at" },
+  { value: "-created_at", key: "newest" },
+  { value: "created_at", key: "oldest" },
+  { value: "name", key: "nameAsc" },
+  { value: "-name", key: "nameDesc" },
+  { value: "-updated_at", key: "updated" },
 ]
 
 export const PAGE_SIZE = 12

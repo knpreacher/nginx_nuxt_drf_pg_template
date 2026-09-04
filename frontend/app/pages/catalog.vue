@@ -1,10 +1,16 @@
 <script setup lang="ts">
 const { $api } = useNuxtApp()
 const toast = useToast()
+const { t, locale } = useI18n()
 
 const route = useRoute()
 const router = useRouter()
 const DEFAULT_ORDER = "-created_at"
+
+// подписи сортировки берём из локали
+const orderItems = computed(() =>
+  ORDER_OPTIONS.map((o) => ({ label: t(`catalog.order.${o.key}`), value: o.value })),
+)
 
 // --- список: поиск, сортировка, пагинация. Начальное состояние берем из query,
 // чтобы перезагрузка/ссылка возвращали на ту же страницу с тем же фильтром ---
@@ -67,7 +73,7 @@ watch(
 )
 
 function fmtDate(s: string) {
-  return new Date(s).toLocaleDateString("ru-RU")
+  return new Date(s).toLocaleDateString(locale.value)
 }
 
 // --- форма создания/редактирования ---
@@ -131,10 +137,10 @@ async function submit() {
       await $api("/catalog/", { method: "POST", body: fd })
     }
     formOpen.value = false
-    toast.add({ title: editingId.value ? "Сохранено" : "Создано", color: "success" })
+    toast.add({ title: t(editingId.value ? "catalog.toast.saved" : "catalog.toast.created"), color: "success" })
     await refresh()
   } catch {
-    toast.add({ title: "Не удалось сохранить", color: "error" })
+    toast.add({ title: t("catalog.toast.saveError"), color: "error" })
   } finally {
     saving.value = false
   }
@@ -149,7 +155,7 @@ async function doDelete() {
   deleting.value = true
   try {
     await $api(`/catalog/${deleteTarget.value.id}/`, { method: "DELETE" })
-    toast.add({ title: "Удалено", color: "success" })
+    toast.add({ title: t("catalog.toast.deleted"), color: "success" })
     // если снесли последнюю карточку на странице — шаг назад
     if (items.value.length === 1 && page.value > 1) {
       page.value -= 1
@@ -158,7 +164,7 @@ async function doDelete() {
     }
     deleteTarget.value = null
   } catch {
-    toast.add({ title: "Не удалось удалить", color: "error" })
+    toast.add({ title: t("catalog.toast.deleteError"), color: "error" })
   } finally {
     deleting.value = false
   }
@@ -168,10 +174,10 @@ async function doDelete() {
 <template>
   <div class="space-y-4">
     <div class="flex items-center gap-3">
-      <h1 class="text-xl font-semibold">Каталог</h1>
+      <h1 class="text-xl font-semibold">{{ t("catalog.title") }}</h1>
       <UBadge color="neutral" variant="subtle">{{ total }}</UBadge>
       <div class="flex-1" />
-      <UButton icon="i-lucide-plus" @click="openCreate">Добавить</UButton>
+      <UButton icon="i-lucide-plus" @click="openCreate">{{ t("catalog.add") }}</UButton>
     </div>
 
     <!-- панель: поиск + сортировка -->
@@ -179,16 +185,16 @@ async function doDelete() {
       <UInput
         v-model="search"
         icon="i-lucide-search"
-        placeholder="Поиск по названию и описанию"
+        :placeholder="t('catalog.searchPlaceholder')"
         class="flex-1"
       />
-      <USelect v-model="order" :items="ORDER_OPTIONS" value-key="value" class="w-full sm:w-56" />
+      <USelect v-model="order" :items="orderItems" value-key="value" class="w-full sm:w-56" />
     </div>
 
     <!-- пусто -->
     <div v-if="items.length === 0" class="py-16 text-center text-muted">
       <UIcon name="i-lucide-package-open" class="size-10 mx-auto mb-2" />
-      <p>Ничего не найдено</p>
+      <p>{{ t("catalog.empty") }}</p>
     </div>
 
     <!-- сетка -->
@@ -217,7 +223,7 @@ async function doDelete() {
               size="xs"
               color="neutral"
               variant="ghost"
-              aria-label="Редактировать"
+              :aria-label="t('common.edit')"
               @click="openEdit(item)"
             />
             <UButton
@@ -225,7 +231,7 @@ async function doDelete() {
               size="xs"
               color="error"
               variant="ghost"
-              aria-label="Удалить"
+              :aria-label="t('common.delete')"
               @click="deleteTarget = item"
             />
           </div>
@@ -241,18 +247,18 @@ async function doDelete() {
     <!-- форма создания/редактирования -->
     <UModal
       v-model:open="formOpen"
-      :title="editingId ? 'Редактировать элемент' : 'Новый элемент'"
-      :description="editingId ? 'Измените поля и сохраните' : 'Заполните поля нового элемента'"
+      :title="editingId ? t('catalog.editTitle') : t('catalog.newTitle')"
+      :description="editingId ? t('catalog.editDesc') : t('catalog.newDesc')"
     >
       <template #body>
         <form class="space-y-4" @submit.prevent="submit">
-          <UFormField label="Название" required>
+          <UFormField :label="t('catalog.fieldName')" required>
             <UInput v-model="form.name" class="w-full" />
           </UFormField>
-          <UFormField label="Описание">
+          <UFormField :label="t('catalog.fieldDescription')">
             <UTextarea v-model="form.description" :rows="4" class="w-full" />
           </UFormField>
-          <UFormField label="Картинка">
+          <UFormField :label="t('catalog.imageLabel')">
             <!-- есть картинка: показываем ее с кнопкой удаления -->
             <div v-if="shownImage" class="relative inline-block">
               <img
@@ -265,7 +271,7 @@ async function doDelete() {
                 size="xs"
                 color="neutral"
                 class="absolute top-1 right-1"
-                aria-label="Удалить картинку"
+                :aria-label="t('catalog.removeImage')"
                 @click="removeImage"
               />
             </div>
@@ -275,17 +281,17 @@ async function doDelete() {
               v-model="file"
               accept="image/*"
               class="w-full"
-              label="Перетащите картинку или нажмите"
-              description="PNG, JPG"
+              :label="t('catalog.dropzoneLabel')"
+              :description="t('catalog.dropzoneHint')"
             />
           </UFormField>
         </form>
       </template>
       <template #footer>
         <div class="flex justify-end gap-2 w-full">
-          <UButton color="neutral" variant="ghost" @click="formOpen = false">Отмена</UButton>
+          <UButton color="neutral" variant="ghost" @click="formOpen = false">{{ t("common.cancel") }}</UButton>
           <UButton :loading="saving" :disabled="!form.name.trim()" @click="submit">
-            Сохранить
+            {{ t("common.save") }}
           </UButton>
         </div>
       </template>
@@ -294,19 +300,19 @@ async function doDelete() {
     <!-- подтверждение удаления -->
     <UModal
       :open="!!deleteTarget"
-      title="Удалить элемент?"
-      description="Действие необратимо"
+      :title="t('catalog.deleteTitle')"
+      :description="t('catalog.deleteDesc')"
       @update:open="deleteTarget = null"
     >
       <template #body>
         <p class="text-sm">
-          «{{ deleteTarget?.name }}» будет удален безвозвратно.
+          {{ t("catalog.deleteConfirm", { name: deleteTarget?.name }) }}
         </p>
       </template>
       <template #footer>
         <div class="flex justify-end gap-2 w-full">
-          <UButton color="neutral" variant="ghost" @click="deleteTarget = null">Отмена</UButton>
-          <UButton color="error" :loading="deleting" @click="doDelete">Удалить</UButton>
+          <UButton color="neutral" variant="ghost" @click="deleteTarget = null">{{ t("common.cancel") }}</UButton>
+          <UButton color="error" :loading="deleting" @click="doDelete">{{ t("common.delete") }}</UButton>
         </div>
       </template>
     </UModal>
