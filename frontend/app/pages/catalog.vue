@@ -6,7 +6,7 @@ const route = useRoute()
 const router = useRouter()
 const DEFAULT_ORDER = "-created_at"
 
-// --- список: поиск, сортировка, пагинация. Начальное состояние берём из query,
+// --- список: поиск, сортировка, пагинация. Начальное состояние берем из query,
 // чтобы перезагрузка/ссылка возвращали на ту же страницу с тем же фильтром ---
 const search = ref(typeof route.query.q === "string" ? route.query.q : "")
 const debounced = ref(search.value)
@@ -55,8 +55,8 @@ const { data, refresh, status } = await useAsyncData(
 const items = computed(() => data.value?.results ?? [])
 const total = computed(() => data.value?.count ?? 0)
 
-// размер страницы задаёт бэкенд (DRF), в ответе его нет —
-// выводим из полной страницы: если есть next, её длина и есть page size
+// размер страницы задает бэкенд (DRF), в ответе его нет —
+// выводим из полной страницы: если есть next, ее длина и есть page size
 const pageSize = ref(PAGE_SIZE)
 watch(
   data,
@@ -74,16 +74,35 @@ function fmtDate(s: string) {
 const formOpen = ref(false)
 const editingId = ref<number | null>(null)
 const form = reactive({ name: "", description: "" })
-const file = ref<File | null>(null)
-const preview = ref<string | null>(null)
+const file = ref<File | null>(null) // новый выбранный файл
+const filePreview = ref<string | null>(null) // object-url нового файла
+const editingUrl = ref<string | null>(null) // уже сохраненная картинка (при редактировании)
+const cleared = ref(false) // пользователь удалил существующую картинку
 const saving = ref(false)
+
+// что показываем: новый файл важнее, затем существующая картинка (если не удалена)
+const shownImage = computed(() =>
+  file.value ? filePreview.value : !cleared.value ? editingUrl.value : null,
+)
+
+// выбран файл -> строим превью
+watch(file, (f) => {
+  filePreview.value = f ? URL.createObjectURL(f) : null
+})
+
+// крестик: сперва снимаем новый файл, повторно — убираем существующую
+function removeImage() {
+  if (file.value) file.value = null
+  else cleared.value = true
+}
 
 function openCreate() {
   editingId.value = null
   form.name = ""
   form.description = ""
   file.value = null
-  preview.value = null
+  editingUrl.value = null
+  cleared.value = false
   formOpen.value = true
 }
 
@@ -92,14 +111,10 @@ function openEdit(item: CatalogItem) {
   form.name = item.name
   form.description = item.description
   file.value = null
-  preview.value = item.image_url
+  editingUrl.value = item.image_url
+  cleared.value = false
   formOpen.value = true
 }
-
-// выбран файл -> обновляем превью
-watch(file, (f) => {
-  if (f) preview.value = URL.createObjectURL(f)
-})
 
 async function submit() {
   if (!form.name.trim()) return
@@ -109,6 +124,7 @@ async function submit() {
     fd.append("name", form.name)
     fd.append("description", form.description)
     if (file.value) fd.append("image", file.value)
+    else if (cleared.value) fd.append("remove_image", "true")
     if (editingId.value) {
       await $api(`/catalog/${editingId.value}/`, { method: "PATCH", body: fd })
     } else {
@@ -237,7 +253,25 @@ async function doDelete() {
             <UTextarea v-model="form.description" :rows="4" class="w-full" />
           </UFormField>
           <UFormField label="Картинка">
+            <!-- есть картинка: показываем ее с кнопкой удаления -->
+            <div v-if="shownImage" class="relative inline-block">
+              <img
+                :src="shownImage"
+                alt=""
+                class="max-h-48 rounded border border-default object-contain"
+              >
+              <UButton
+                icon="i-lucide-x"
+                size="xs"
+                color="neutral"
+                class="absolute top-1 right-1"
+                aria-label="Удалить картинку"
+                @click="removeImage"
+              />
+            </div>
+            <!-- нет картинки: дропзона -->
             <UFileUpload
+              v-else
               v-model="file"
               accept="image/*"
               class="w-full"
@@ -245,12 +279,6 @@ async function doDelete() {
               description="PNG, JPG"
             />
           </UFormField>
-          <img
-            v-if="preview"
-            :src="preview"
-            alt=""
-            class="max-h-40 rounded border border-default object-contain"
-          >
         </form>
       </template>
       <template #footer>
@@ -272,7 +300,7 @@ async function doDelete() {
     >
       <template #body>
         <p class="text-sm">
-          «{{ deleteTarget?.name }}» будет удалён безвозвратно.
+          «{{ deleteTarget?.name }}» будет удален безвозвратно.
         </p>
       </template>
       <template #footer>

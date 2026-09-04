@@ -11,11 +11,11 @@ from catalog.models import CatalogItem
 User = get_user_model()
 
 
-def png():
+def png(name="x.png"):
     # маленькая валидная картинка для загрузки
     buf = BytesIO()
     Image.new("RGB", (4, 4), "red").save(buf, "PNG")
-    return SimpleUploadedFile("x.png", buf.getvalue(), content_type="image/png")
+    return SimpleUploadedFile(name, buf.getvalue(), content_type="image/png")
 
 
 @pytest.fixture
@@ -39,12 +39,16 @@ def test_list_requires_auth():
 
 @pytest.mark.django_db
 def test_list_paginated(client):
-    for i in range(15):
+    from rest_framework.settings import api_settings
+
+    size = api_settings.PAGE_SIZE
+    n = size + 3
+    for i in range(n):
         CatalogItem.objects.create(name=f"item {i}")
     r = client.get("/api/catalog/")
     assert r.status_code == 200
-    assert r.data["count"] == 15
-    assert len(r.data["results"]) == 12  # PAGE_SIZE
+    assert r.data["count"] == n
+    assert len(r.data["results"]) == size  # первая страница заполнена целиком
     assert r.data["next"]
 
 
@@ -109,3 +113,36 @@ def test_delete(client):
     r = client.delete(f"/api/catalog/{item.id}/")
     assert r.status_code == 204
     assert not CatalogItem.objects.filter(id=item.id).exists()
+
+
+@pytest.mark.django_db
+def test_remove_image_clears_field_and_file(client, media):
+    import os
+
+    r = client.post("/api/catalog/", {"name": "с картинкой", "image": png()}, format="multipart")
+    item_id = r.data["id"]
+    assert r.data["image_url"]
+    path = CatalogItem.objects.get(id=item_id).image.path
+    assert os.path.exists(path)
+
+    r2 = client.patch(f"/api/catalog/{item_id}/", {"remove_image": "true"}, format="multipart")
+    assert r2.status_code == 200
+    assert r2.data["image_url"] is None
+    assert not CatalogItem.objects.get(id=item_id).image
+    assert not os.path.exists(path)  # старый файл удален с диска
+
+
+@pytest.mark.django_db
+def test_replace_image_removes_old_file(client, media):
+    import os
+
+    r = client.post("/api/catalog/", {"name": "x", "image": png("a.png")}, format="multipart")
+    item_id = r.data["id"]
+    old = CatalogItem.objects.get(id=item_id).image.path
+
+    r2 = client.patch(f"/api/catalog/{item_id}/", {"image": png("b.png")}, format="multipart")
+    assert r2.status_code == 200
+    new = CatalogItem.objects.get(id=item_id).image.path
+    assert new != old
+    assert os.path.exists(new)
+    assert not os.path.exists(old)  # старый файл убран
