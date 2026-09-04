@@ -1,7 +1,19 @@
 <script setup lang="ts">
 const { user, logout } = useAuth()
 const route = useRoute()
+const { t, locale, locales, setLocale } = useI18n()
+const colorMode = useColorMode()
 const drawerOpen = ref(false)
+
+// пункты переключателя языка
+const localeItems = computed(() =>
+  (locales.value as { code: string; name: string }[]).map((l) => ({ label: l.name, value: l.code })),
+)
+
+// тумблер темы: тёмная <-> светлая
+function toggleTheme() {
+  colorMode.preference = colorMode.value === "dark" ? "light" : "dark"
+}
 
 // drawer закрываем при смене роута
 watch(() => route.path, () => {
@@ -18,7 +30,7 @@ async function onLogout() {
   <div class="min-h-screen flex bg-default">
     <!-- десктопный сайдбар -->
     <aside class="hidden lg:flex lg:flex-col w-64 shrink-0 border-r border-default p-4 gap-4">
-      <div class="px-2 text-lg font-semibold">App</div>
+      <div class="px-2 text-lg font-semibold">{{ t("common.appName") }}</div>
       <AppNav class="flex-1" />
       <div class="border-t border-default pt-3">
         <p class="px-2 text-sm text-muted truncate">{{ user?.email }}</p>
@@ -30,7 +42,7 @@ async function onLogout() {
           block
           @click="onLogout"
         >
-          Выйти
+          {{ t("common.logout") }}
         </UButton>
       </div>
     </aside>
@@ -43,17 +55,40 @@ async function onLogout() {
           icon="i-lucide-menu"
           color="neutral"
           variant="ghost"
-          aria-label="Меню"
+          :aria-label="t('common.menu')"
           @click="drawerOpen = true"
         />
-        <div class="font-semibold lg:hidden">App</div>
+        <div class="font-semibold lg:hidden">{{ t("common.appName") }}</div>
         <div class="flex-1" />
-        <span class="hidden sm:block text-sm text-muted truncate max-w-[50vw]">{{ user?.email }}</span>
+        <!-- вариант 1: своя кнопка-тоггл (солнце/луна) -->
+        <ClientOnly>
+          <UButton
+            :icon="colorMode.value === 'dark' ? 'i-lucide-moon' : 'i-lucide-sun'"
+            color="neutral"
+            variant="ghost"
+            :aria-label="t('common.theme')"
+            @click="toggleTheme"
+          />
+          <template #fallback>
+            <UButton icon="i-lucide-sun" color="neutral" variant="ghost" disabled />
+          </template>
+        </ClientOnly>
+        <!-- вариант 2: готовый компонент из @nuxt/ui v4 (иконки/состояние — внутри) -->
+        <UColorModeSwitch />
+        <USelect
+          :model-value="locale"
+          :items="localeItems"
+          value-key="value"
+          size="sm"
+          class="w-28"
+          @update:model-value="setLocale($event)"
+        />
+        <span class="hidden sm:block text-sm text-muted truncate max-w-[40vw]">{{ user?.email }}</span>
         <UButton
           icon="i-lucide-log-out"
           color="neutral"
           variant="ghost"
-          aria-label="Выйти"
+          :aria-label="t('common.logout')"
           @click="onLogout"
         />
       </header>
@@ -64,7 +99,7 @@ async function onLogout() {
     </div>
 
     <!-- мобильный drawer с той же навигацией -->
-    <USlideover v-model:open="drawerOpen" side="left" title="App">
+    <USlideover v-model:open="drawerOpen" side="left" :title="t('common.appName')">
       <template #body>
         <AppNav @navigate="drawerOpen = false" />
       </template>
