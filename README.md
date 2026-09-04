@@ -38,6 +38,24 @@ docker compose -f docker-compose.dev.yml exec \
   backend python manage.py createsuperuser --noinput
 ```
 
+## Каталог (пример CRUD)
+
+Приложение `catalog` - образец полноценной сущности: модель `CatalogItem`
+(название, описание, картинка, даты), DRF-`ModelViewSet` под `/api/catalog/`
+с пагинацией (`?page=`), поиском (`?search=` по названию и описанию) и
+сортировкой (`?ordering=name|created_at|updated_at`). На фронте — страница
+`/catalog` с сеткой, поиском, сортировкой, пагинацией и CRUD в модалках.
+
+Загрузить демо-данные (10 записей с placeholder-картинками):
+
+```bash
+make seed          # docker compose ... exec backend python manage.py seed_catalog
+# --flush перезапишет уже существующий каталог
+```
+
+Картинки-заглушки лежат в `backend/app/catalog/seed_images/`, команда кладет их
+в `MEDIA_ROOT`. Сами данные — обычная Django-fixture `catalog/fixtures/catalog.json`.
+
 ## Гибридный dev (back/front на хосте)
 
 Когда удобнее запускать Django и Nuxt нативно (быстрее итерации, дебаггер),

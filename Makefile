@@ -1,4 +1,4 @@
-.PHONY: up down dev dev-down build logs migrate makemigrations superuser shell-be shell-fe hybrid hybrid-down hybrid-back hybrid-front
+.PHONY: up down dev dev-down build logs migrate makemigrations superuser seed shell-be shell-fe hybrid hybrid-down hybrid-back hybrid-front
 
 # прод-стек
 up:             ; docker compose up -d --build
@@ -14,6 +14,7 @@ dev-down:       ; docker compose -f docker-compose.dev.yml down
 migrate:        ; docker compose -f docker-compose.dev.yml exec backend python manage.py migrate
 makemigrations: ; docker compose -f docker-compose.dev.yml exec backend python manage.py makemigrations
 superuser:      ; docker compose -f docker-compose.dev.yml exec backend python manage.py createsuperuser
+seed:           ; docker compose -f docker-compose.dev.yml exec backend python manage.py seed_catalog
 shell-be:       ; docker compose -f docker-compose.dev.yml exec backend sh
 shell-fe:       ; docker compose -f docker-compose.dev.yml exec frontend sh
 
