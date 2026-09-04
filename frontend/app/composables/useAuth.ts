@@ -20,7 +20,12 @@ export function useAuth() {
   }
 
   async function login(email: string, password: string) {
-    user.value = await $api<AuthUser>("/auth/login/", { method: "POST", body: { email, password } })
+    // retry:0 — неверный пароль не должен повторять POST (глобальный retryStatusCodes)
+    user.value = await $api<AuthUser>("/auth/login/", {
+      method: "POST",
+      body: { email, password },
+      retry: 0,
+    })
   }
 
   async function logout() {
