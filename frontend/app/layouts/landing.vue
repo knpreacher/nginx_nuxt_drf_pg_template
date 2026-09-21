@@ -39,7 +39,7 @@ async function onLogout() {
 <template>
   <div class="min-h-screen flex flex-col bg-default">
     <header class="h-14 flex items-center gap-3 border-b border-default px-4 sm:px-6">
-      <div class="font-semibold">{{ t("common.appName") }}</div>
+      <NuxtLink to="/" class="font-semibold hover:text-primary">{{ t("common.appName") }}</NuxtLink>
       <div class="flex-1" />
       <!-- переключатель темы (готовый компонент @nuxt/ui) -->
       <UColorModeSwitch />

@@ -30,7 +30,7 @@ async function onLogout() {
   <div class="min-h-screen flex bg-default">
     <!-- десктопный сайдбар -->
     <aside class="hidden lg:flex lg:flex-col w-64 shrink-0 border-r border-default p-4 gap-4">
-      <div class="px-2 text-lg font-semibold">{{ t("common.appName") }}</div>
+      <NuxtLink to="/" class="px-2 text-lg font-semibold hover:text-primary">{{ t("common.appName") }}</NuxtLink>
       <AppNav class="flex-1" />
       <div class="border-t border-default pt-3">
         <p class="px-2 text-sm text-muted truncate">{{ user?.email }}</p>
@@ -58,7 +58,7 @@ async function onLogout() {
           :aria-label="t('common.menu')"
           @click="drawerOpen = true"
         />
-        <div class="font-semibold lg:hidden">{{ t("common.appName") }}</div>
+        <NuxtLink to="/" class="font-semibold lg:hidden hover:text-primary">{{ t("common.appName") }}</NuxtLink>
         <div class="flex-1" />
         <!-- вариант 1: своя кнопка-тоггл (солнце/луна) -->
         <ClientOnly>

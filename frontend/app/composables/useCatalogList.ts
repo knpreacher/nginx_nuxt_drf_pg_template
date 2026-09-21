@@ -64,5 +64,11 @@ export function useCatalogList(endpoint: string) {
     { immediate: true },
   )
 
-  return { search, order, page, debounced, items, total, pageSize, data, refresh, status, ready }
+  // удалили последний элемент на непервой странице — шаг назад (иначе DRF отдаст 404 на пустую страницу)
+  function reloadAfterRemoval() {
+    if (items.value.length <= 1 && page.value > 1) page.value--
+    else refresh()
+  }
+
+  return { search, order, page, debounced, items, total, pageSize, data, refresh, reloadAfterRemoval, status, ready }
 }
