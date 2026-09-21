@@ -133,6 +133,51 @@ def test_remove_image_clears_field_and_file(client, media):
 
 
 @pytest.mark.django_db
+def test_public_list_no_auth_only_public():
+    CatalogItem.objects.create(name="публичный 1", is_public=True)
+    CatalogItem.objects.create(name="публичный 2", is_public=True)
+    CatalogItem.objects.create(name="приватный", is_public=False)
+    r = APIClient().get("/api/public/catalog/")  # без авторизации
+    assert r.status_code == 200
+    assert r.data["count"] == 2
+    names = {x["name"] for x in r.data["results"]}
+    assert names == {"публичный 1", "публичный 2"}
+
+
+@pytest.mark.django_db
+def test_public_serializer_has_no_write_fields():
+    CatalogItem.objects.create(name="публичный", is_public=True)
+    r = APIClient().get("/api/public/catalog/")
+    item = r.data["results"][0]
+    assert set(item.keys()) == {"id", "name", "description", "image_url", "created_at", "updated_at"}
+
+
+@pytest.mark.django_db
+def test_public_list_is_read_only():
+    # создавать через публичный эндпоинт нельзя
+    assert APIClient().post("/api/public/catalog/", {"name": "x"}).status_code == 405
+
+
+@pytest.mark.django_db
+def test_private_list_still_requires_auth():
+    assert APIClient().get("/api/catalog/").status_code == 401
+
+
+@pytest.mark.django_db
+def test_is_public_create_and_update(client):
+    r = client.post("/api/catalog/", {"name": "новый", "is_public": "true"}, format="multipart")
+    assert r.status_code == 201, r.data
+    assert r.data["is_public"] is True
+    item_id = r.data["id"]
+    assert CatalogItem.objects.get(id=item_id).is_public is True
+
+    r2 = client.patch(f"/api/catalog/{item_id}/", {"is_public": "false"}, format="multipart")
+    assert r2.status_code == 200
+    assert r2.data["is_public"] is False
+    assert CatalogItem.objects.get(id=item_id).is_public is False
+
+
+@pytest.mark.django_db
 def test_replace_image_removes_old_file(client, media):
     import os
 

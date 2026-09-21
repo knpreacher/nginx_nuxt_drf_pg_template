@@ -1,8 +1,19 @@
 <script setup lang="ts">
-definePageMeta({ layout: "auth" })
+definePageMeta({ layout: "auth", public: true })
 
 const { t } = useI18n()
-const { login } = useAuth()
+const { login, user } = useAuth()
+const route = useRoute()
+
+// куда уходим после входа: из query (только внутренний путь), иначе панель управления
+const redirect = computed(() => {
+  const r = route.query.redirect
+  return typeof r === "string" && r.startsWith("/") ? r : "/control"
+})
+
+// уже авторизован — незачем показывать форму
+if (user.value) await navigateTo(redirect.value)
+
 const email = ref("")
 const password = ref("")
 const error = ref("")
@@ -13,7 +24,7 @@ async function onSubmit() {
   loading.value = true
   try {
     await login(email.value, password.value)
-    await navigateTo("/")
+    await navigateTo(redirect.value)
   } catch {
     error.value = t("login.error")
   } finally {

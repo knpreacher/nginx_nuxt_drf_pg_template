@@ -1,9 +1,16 @@
 {
   "nav": {
     "home": "Главная",
+    "control": "Панель управления",
     "catalog": "Каталог",
     "profile": "Профиль",
     "settings": "Настройки"
+  },
+  "landing": {
+    "login": "Войти",
+    "menu": {
+      "control": "Панель управления"
+    }
   },
   "common": {
     "appName": "App",
@@ -42,6 +49,7 @@
   "catalog": {
     "title": "Каталог",
     "add": "Добавить",
+    "public": "Публичный",
     "searchPlaceholder": "Поиск по названию и описанию",
     "empty": "Ничего не найдено",
     "imageLabel": "Картинка",

@@ -1,9 +1,16 @@
 {
   "nav": {
     "home": "Home",
+    "control": "Control panel",
     "catalog": "Catalog",
     "profile": "Profile",
     "settings": "Settings"
+  },
+  "landing": {
+    "login": "Sign in",
+    "menu": {
+      "control": "Control panel"
+    }
   },
   "common": {
     "appName": "App",
@@ -42,6 +49,7 @@
   "catalog": {
     "title": "Catalog",
     "add": "Add",
+    "public": "Public",
     "searchPlaceholder": "Search by name and description",
     "empty": "Nothing found",
     "imageLabel": "Image",

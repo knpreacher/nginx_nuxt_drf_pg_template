@@ -1,8 +1,9 @@
 export default defineNuxtRouteMiddleware(async (to) => {
   const { user, fetchMe } = useAuth()
-  if (to.path === "/login") return
-  if (!user.value) {
-    const me = await fetchMe()
-    if (!me) return navigateTo("/login")
-  }
+  // узнаем, кто в системе — нужно и на публичных страницах (аватар vs кнопка входа)
+  if (!user.value) await fetchMe()
+  // публичные страницы пускаем всегда
+  if (to.meta.public) return
+  // приватные — только авторизованным, иначе на логин с возвратом на исходный путь
+  if (!user.value) return navigateTo(`/login?redirect=${encodeURIComponent(to.fullPath)}`)
 })

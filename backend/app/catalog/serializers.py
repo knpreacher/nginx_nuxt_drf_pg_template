@@ -13,7 +13,10 @@ class CatalogItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CatalogItem
-        fields = ("id", "name", "description", "image", "image_url", "remove_image", "created_at", "updated_at")
+        fields = (
+            "id", "name", "description", "image", "image_url",
+            "remove_image", "is_public", "created_at", "updated_at",
+        )
         read_only_fields = ("created_at", "updated_at")
 
     def get_image_url(self, obj):
@@ -31,3 +34,15 @@ class CatalogItemSerializer(serializers.ModelSerializer):
         if remove:
             validated_data["image"] = None
         return super().update(instance, validated_data)
+
+
+class PublicCatalogItemSerializer(serializers.ModelSerializer):
+    # только чтение для лендинга: отдаем относительный url картинки
+    image_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CatalogItem
+        fields = ("id", "name", "description", "image_url", "created_at", "updated_at")
+
+    def get_image_url(self, obj):
+        return obj.image.url if obj.image else None

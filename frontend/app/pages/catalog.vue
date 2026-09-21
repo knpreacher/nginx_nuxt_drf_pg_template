@@ -3,73 +3,14 @@ const { $api } = useNuxtApp()
 const toast = useToast()
 const { t, locale } = useI18n()
 
-const route = useRoute()
-const router = useRouter()
-const DEFAULT_ORDER = "-created_at"
+// общий листинг (поиск, сортировка, пагинация, синхронизация с query) на приватном эндпоинте
+const list = useCatalogList("/catalog/")
+await list.ready // блокируем SSR до загрузки
+const { search, order, page, items, total, pageSize, refresh } = list
 
 // подписи сортировки берём из локали
 const orderItems = computed(() =>
   ORDER_OPTIONS.map((o) => ({ label: t(`catalog.order.${o.key}`), value: o.value })),
-)
-
-// --- список: поиск, сортировка, пагинация. Начальное состояние берем из query,
-// чтобы перезагрузка/ссылка возвращали на ту же страницу с тем же фильтром ---
-const search = ref(typeof route.query.q === "string" ? route.query.q : "")
-const debounced = ref(search.value)
-const order = ref(
-  ORDER_OPTIONS.some((o) => o.value === route.query.ordering)
-    ? String(route.query.ordering)
-    : DEFAULT_ORDER,
-)
-const page = ref(Number(route.query.page) > 1 ? Number(route.query.page) : 1)
-
-// debounce поиска, любой сброс фильтра возвращает на первую страницу
-let timer: ReturnType<typeof setTimeout>
-watch(search, (v) => {
-  clearTimeout(timer)
-  timer = setTimeout(() => {
-    debounced.value = v
-    page.value = 1
-  }, 300)
-})
-watch(order, () => {
-  page.value = 1
-})
-
-// состояние -> query (replace, чтобы не засорять историю); дефолты опускаем
-watch([debounced, order, page], () => {
-  const q: Record<string, string> = {}
-  if (debounced.value) q.q = debounced.value
-  if (order.value !== DEFAULT_ORDER) q.ordering = order.value
-  if (page.value > 1) q.page = String(page.value)
-  router.replace({ query: q })
-})
-
-const { data, refresh, status } = await useAsyncData(
-  "catalog-list",
-  () =>
-    $api<Paginated<CatalogItem>>("/catalog/", {
-      query: {
-        search: debounced.value || undefined,
-        ordering: order.value,
-        page: page.value,
-      },
-    }),
-  { watch: [debounced, order, page] },
-)
-
-const items = computed(() => data.value?.results ?? [])
-const total = computed(() => data.value?.count ?? 0)
-
-// размер страницы задает бэкенд (DRF), в ответе его нет —
-// выводим из полной страницы: если есть next, ее длина и есть page size
-const pageSize = ref(PAGE_SIZE)
-watch(
-  data,
-  (d) => {
-    if (d?.next && d.results.length) pageSize.value = d.results.length
-  },
-  { immediate: true },
 )
 
 function fmtDate(s: string) {
@@ -79,7 +20,7 @@ function fmtDate(s: string) {
 // --- форма создания/редактирования ---
 const formOpen = ref(false)
 const editingId = ref<number | null>(null)
-const form = reactive({ name: "", description: "" })
+const form = reactive({ name: "", description: "", is_public: false })
 const file = ref<File | null>(null) // новый выбранный файл
 const filePreview = ref<string | null>(null) // object-url нового файла
 const editingUrl = ref<string | null>(null) // уже сохраненная картинка (при редактировании)
@@ -106,6 +47,7 @@ function openCreate() {
   editingId.value = null
   form.name = ""
   form.description = ""
+  form.is_public = false
   file.value = null
   editingUrl.value = null
   cleared.value = false
@@ -116,6 +58,7 @@ function openEdit(item: CatalogItem) {
   editingId.value = item.id
   form.name = item.name
   form.description = item.description
+  form.is_public = item.is_public
   file.value = null
   editingUrl.value = item.image_url
   cleared.value = false
@@ -129,6 +72,7 @@ async function submit() {
     const fd = new FormData()
     fd.append("name", form.name)
     fd.append("description", form.description)
+    fd.append("is_public", form.is_public ? "true" : "false")
     if (file.value) fd.append("image", file.value)
     else if (cleared.value) fd.append("remove_image", "true")
     if (editingId.value) {
@@ -214,7 +158,13 @@ async function doDelete() {
           <UIcon v-else name="i-lucide-image" class="size-10 text-muted" />
         </div>
         <div class="flex flex-col flex-1 p-3 gap-1">
-          <h3 class="font-medium truncate">{{ item.name }}</h3>
+          <div class="flex items-center gap-2">
+            <h3 class="font-medium truncate flex-1">{{ item.name }}</h3>
+            <!-- бейдж публичности -->
+            <UBadge v-if="item.is_public" color="primary" variant="subtle" size="sm">
+              {{ t("catalog.public") }}
+            </UBadge>
+          </div>
           <p class="text-sm text-muted line-clamp-2 flex-1">{{ item.description }}</p>
           <div class="flex items-center gap-2 pt-2">
             <span class="text-xs text-muted flex-1">{{ fmtDate(item.created_at) }}</span>
@@ -284,6 +234,10 @@ async function doDelete() {
               :label="t('catalog.dropzoneLabel')"
               :description="t('catalog.dropzoneHint')"
             />
+          </UFormField>
+          <!-- публичность: виден ли элемент на лендинге -->
+          <UFormField :label="t('catalog.public')">
+            <USwitch v-model="form.is_public" />
           </UFormField>
         </form>
       </template>
